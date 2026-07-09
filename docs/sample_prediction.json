@@ -1,0 +1,61 @@
+{
+    "predicted_rul": 123.49,
+    "health_score": 98.8,
+    "risk_level": "Low",
+    "recommendation": "Engine operating normally. Continue monitoring.",
+    "explanation": {
+        "prediction": 123.48751068115234,
+        "top_features": [
+            {
+                "Feature": "sensor_11_rollmean",
+                "Feature Value": 47.288,
+                "SHAP Value": 6.3840651512146
+            },
+            {
+                "Feature": "sensor_4_rollmean",
+                "Feature Value": 1399.9180000000001,
+                "SHAP Value": 5.207635402679443
+            },
+            {
+                "Feature": "sensor_9_rollmean",
+                "Feature Value": 9050.324,
+                "SHAP Value": 5.145367622375488
+            },
+            {
+                "Feature": "sensor_21_rollmean",
+                "Feature Value": 23.3735,
+                "SHAP Value": 3.305323362350464
+            },
+            {
+                "Feature": "sensor_15_rollmean",
+                "Feature Value": 8.4262,
+                "SHAP Value": 3.2870821952819824
+            },
+            {
+                "Feature": "sensor_3_rollmean",
+                "Feature Value": 1586.998,
+                "SHAP Value": 2.6055986881256104
+            },
+            {
+                "Feature": "sensor_14_rollmean",
+                "Feature Value": 8132.031999999999,
+                "SHAP Value": 2.1435482501983643
+            },
+            {
+                "Feature": "sensor_2_rollmean",
+                "Feature Value": 642.266,
+                "SHAP Value": 2.0315024852752686
+            },
+            {
+                "Feature": "sensor_17_rollmean",
+                "Feature Value": 392.0,
+                "SHAP Value": 1.7881643772125244
+            },
+            {
+                "Feature": "sensor_20_rollmean",
+                "Feature Value": 38.924,
+                "SHAP Value": 0.7781763076782227
+            }
+        ]
+    }
+}
