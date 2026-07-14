@@ -32,19 +32,31 @@ else:
 
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
-uploaded_file = st.sidebar.file_uploader("Upload Engine History (CSV)", type="csv")
+uploaded_file = st.sidebar.file_uploader("Upload Engine History", type=["csv", "txt"])
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("Model Information")
+st.sidebar.write("**Model:** XGBoost")
+st.sidebar.write("**Dataset:** NASA CMAPSS FD001")
+st.sidebar.write("**Explainability:** SHAP")
 
 # ==========================================
 # MAIN DASHBOARD LOGIC
 # ==========================================
 if uploaded_file is not None:
     # 1. Load Data
-    df = pd.read_csv(uploaded_file, sep="\s+", header=None)
+    df = pd.read_csv(uploaded_file, sep=r"\s+", header=None)
+    
     
     # Assign column names (assuming raw CMAPSS format)
-    columns = ["engine_id", "cycle", "op_setting_1", "op_setting_2", "op_setting_3"] + [f"sensor_{i}" for i in range(1, 22)]
     if len(df.columns) == 26:
+        columns = ["engine_id", "cycle", "op_setting_1", "op_setting_2", "op_setting_3"] + [f"sensor_{i}" for i in range(1, 22)]
         df.columns = columns
+    else:
+        st.error("⚠️ Invalid file format. Please upload a valid NASA CMAPSS dataset (26 columns).")
+        st.stop() # Halts execution gracefully
+        
+    # 2. Select Engine
         
     # 2. Select Engine
     engine_ids = sorted(df["engine_id"].unique())
@@ -64,15 +76,15 @@ if uploaded_file is not None:
                 # TOP METRICS
                 # ==========================================
                 c1, c2, c3 = st.columns(3)
-                c1.metric("Remaining Useful Life", f"{result['predicted_rul']} Flights")
-                c2.metric("Health Score", f"{result['health_score']} %")
+                c1.metric("Remaining Useful Life", f"{round(result['predicted_rul'])} Cycles")
+                c2.metric("Engine Health", f"{result['health_score']}/100")
                 c3.metric("Risk Level", result['risk_level'])
                 
                 # Recommendation Banner
-                if result['risk_level'] == "High":
-                    st.error(f"⚠️ **Action Required:** {result['recommendation']}")
-                elif result['risk_level'] == "Medium":
-                    st.warning(f"⚡ **Warning:** {result['recommendation']}")
+                if result["risk_level"] == "High":
+                    st.error(f"🚨 **Action Required:** {result['recommendation']}")
+                elif result["risk_level"] == "Medium":
+                    st.warning(f"⚠️ **Warning:** {result['recommendation']}")
                 else:
                     st.success(f"✅ **Healthy:** {result['recommendation']}")
                 
@@ -84,6 +96,7 @@ if uploaded_file is not None:
                 col1, col2 = st.columns([1, 2])
                 
                 with col1:
+                    st.subheader("Engine Health Score")
                     st.plotly_chart(create_health_gauge(result["health_score"]), use_container_width=True)
                     
                     # Download Button
@@ -99,21 +112,51 @@ if uploaded_file is not None:
                     exp_df = pd.DataFrame(result["explanation"]["top_features"])
                     st.plotly_chart(create_shap_bar_chart(exp_df), use_container_width=True)
                     
+                    st.dataframe(
+                        exp_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                    
+                    st.subheader("Model Explanation")
+                    top = result["explanation"]["top_features"]
+                    if len(top) >= 3:
+                        st.info(
+                            f"""
+                            The prediction is mainly influenced by **{top[0]['Feature']}**, 
+                            **{top[1]['Feature']}**, and **{top[2]['Feature']}**.
+                            
+                            These sensors contributed the most toward the predicted Remaining Useful Life.
+                            """
+                        )
+                    
                 st.markdown("---")
                 
                 # ==========================================
                 # HISTORICAL SENSOR TREND
                 # ==========================================
                 st.subheader("Historical Sensor Analysis")
-                sensor_cols = [c for c in engine_df.columns if "sensor" in c]
+                DROP_SENSORS = [
+                    "sensor_1", "sensor_5", "sensor_6", 
+                    "sensor_10", "sensor_16", "sensor_18", "sensor_19"
+                ]
+                sensor_cols = [
+                    c for c in engine_df.columns 
+                    if c.startswith("sensor_") and c not in DROP_SENSORS
+                ]
                 selected_sensor = st.selectbox("Select Sensor to Plot", sensor_cols)
                 
                 trend_fig = px.line(
                     engine_df, 
                     x="cycle", 
                     y=selected_sensor, 
-                    title=f"{selected_sensor} History for Engine {selected_engine}",
-                    markers=True
+                    markers=True,
+                    title=f"{selected_sensor} Trend Across Engine Cycles"
+                )
+                trend_fig.update_layout(
+                    xaxis_title="Cycle",
+                    yaxis_title=selected_sensor,
+                    template="plotly_white"
                 )
                 st.plotly_chart(trend_fig, use_container_width=True)
 
@@ -122,3 +165,6 @@ if uploaded_file is not None:
 else:
     # Splash Screen when no data is uploaded
     st.info("👈 Upload a raw CMAPSS `test_FD001.txt` CSV file in the sidebar to begin.")
+
+st.markdown("---")
+st.caption("PredictX AI • Built using Python • XGBoost • SHAP • FastAPI • Streamlit")

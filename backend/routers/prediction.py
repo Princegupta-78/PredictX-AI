@@ -12,8 +12,10 @@ def health_check():
     """Basic health check endpoint."""
     return {
         "status": "Running",
-        "model": "XGBoost + SHAP",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "model": "XGBoost",
+        "dataset": "NASA CMAPSS FD001",
+        "explainability": "SHAP"
     }
 
 @router.post("/predict", response_model=PredictionResponse)

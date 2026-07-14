@@ -1,9 +1,12 @@
+import matplotlib
+matplotlib.use('Agg') # MUST be first
+import matplotlib.pyplot as plt # Then import pyplot
 import joblib
 import shap
 import pandas as pd
-import matplotlib.pyplot as plt
 from pathlib import Path
 
+# ... rest of your class code ...
 class ModelExplainer:
     def __init__(self, model_path):
         """Loads the saved artifact and initializes the SHAP TreeExplainer."""

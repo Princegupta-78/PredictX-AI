@@ -1,6 +1,8 @@
+import os
 import requests
 
-API_URL = "http://127.0.0.1:8000"
+# Dynamically fetch the API URL. Defaults to localhost for local testing.
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 def check_api_status():
     """Pings the FastAPI backend to ensure it's online."""
@@ -9,6 +11,7 @@ def check_api_status():
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
+        
 
 def predict_engine(engine_df):
     """Sends engine data to the FastAPI backend and returns the JSON prediction."""

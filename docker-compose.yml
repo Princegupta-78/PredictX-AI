@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    container_name: predictx_backend
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8501:8501"
+    container_name: predictx_frontend
+    environment:
+      # In Docker, the frontend must talk to the backend container by its service name
+      - API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
