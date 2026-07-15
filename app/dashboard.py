@@ -28,23 +28,36 @@ st.markdown("---")
 # ==========================================
 st.sidebar.header("System Status")
 
-# Smart polling for free-tier cold starts
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+HEALTH_URL = f"{API_URL.rstrip('/')}/docs"
 
-with st.sidebar.status("🚀 Backend waking up (30-60s)...", expanded=True) as status:
-    while True:
+# 90-second timeout logic
+MAX_WAIT_SECONDS = 90
+start_time = time.time()
+
+with st.sidebar.status("🚀 Waking up prediction engine (up to 90s)...", expanded=True) as status:
+    is_connected = False
+    
+    while (time.time() - start_time) < MAX_WAIT_SECONDS:
         try:
-            # Ping the backend root URL to check if it is awake
-            response = requests.get(API_URL, timeout=3)
-            if response.status_code == 200:
+            # Ping the FastAPI docs endpoint
+            response = requests.get(HEALTH_URL, timeout=5)
+            
+            # If server responds, it is online
+            if response.status_code in [200, 404, 405]:
                 status.update(label="🟢 Backend API Connected!", state="complete", expanded=False)
+                is_connected = True
                 break
         except requests.exceptions.RequestException:
-            # If it fails, do nothing. Just wait and try again.
+            # Still asleep, wait 5 seconds and loop again
             pass
         
-        # Rest for 5 seconds before trying again
         time.sleep(5)
+        
+    # If 90 seconds pass and it never connected, fail gracefully
+    if not is_connected:
+        status.update(label="🔴 Backend failed to wake up. Please refresh.", state="error", expanded=True)
+        st.stop()
 
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
