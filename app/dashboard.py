@@ -2,8 +2,11 @@ import streamlit as st
 import pandas as pd
 import json
 import plotly.express as px
+import requests
+import time
+import os
 
-from api import check_api_status, predict_engine
+from api import predict_engine
 from utils import create_health_gauge, create_shap_bar_chart
 
 # ==========================================
@@ -21,14 +24,27 @@ st.caption("Powered by XGBoost + SHAP Explainability + FastAPI")
 st.markdown("---")
 
 # ==========================================
-# SIDEBAR
+# SIDEBAR & SYSTEM STATUS
 # ==========================================
 st.sidebar.header("System Status")
-if check_api_status():
-    st.sidebar.success("🟢 Backend API Connected")
-else:
-    st.sidebar.error("🔴 Backend API Offline")
-    st.stop() # Stop execution if backend is down
+
+# Smart polling for free-tier cold starts
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+
+with st.sidebar.status("🚀 Backend waking up (30-60s)...", expanded=True) as status:
+    while True:
+        try:
+            # Ping the backend root URL to check if it is awake
+            response = requests.get(API_URL, timeout=3)
+            if response.status_code == 200:
+                status.update(label="🟢 Backend API Connected!", state="complete", expanded=False)
+                break
+        except requests.exceptions.RequestException:
+            # If it fails, do nothing. Just wait and try again.
+            pass
+        
+        # Rest for 5 seconds before trying again
+        time.sleep(5)
 
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
@@ -47,7 +63,6 @@ if uploaded_file is not None:
     # 1. Load Data
     df = pd.read_csv(uploaded_file, sep=r"\s+", header=None)
     
-    
     # Assign column names (assuming raw CMAPSS format)
     if len(df.columns) == 26:
         columns = ["engine_id", "cycle", "op_setting_1", "op_setting_2", "op_setting_3"] + [f"sensor_{i}" for i in range(1, 22)]
@@ -55,8 +70,6 @@ if uploaded_file is not None:
     else:
         st.error("⚠️ Invalid file format. Please upload a valid NASA CMAPSS dataset (26 columns).")
         st.stop() # Halts execution gracefully
-        
-    # 2. Select Engine
         
     # 2. Select Engine
     engine_ids = sorted(df["engine_id"].unique())
