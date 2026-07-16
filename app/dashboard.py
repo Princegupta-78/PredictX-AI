@@ -29,37 +29,35 @@ st.markdown("---")
 st.sidebar.header("System Status")
 
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
-HEALTH_URL = f"{API_URL.rstrip('/')}/docs"
+HEALTH_URL = f"{API_URL.rstrip('/')}/"
 
-# DEBUG: Print the exact URL to the UI so we can see if it's correct
-st.sidebar.caption(f"🔍 Target: `{HEALTH_URL}`")
+if "backend_awake" not in st.session_state:
+    st.session_state.backend_awake = False
 
-MAX_WAIT_SECONDS = 180
-start_time = time.time()
+def check_backend():
+    try:
+        r = requests.get(HEALTH_URL, timeout=5)
+        return r.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
 
-with st.sidebar.status("🚀 Waking up prediction engine...", expanded=True) as status:
-    is_connected = False
-    
-    while (time.time() - start_time) < MAX_WAIT_SECONDS:
-        try:
-            # Increased timeout to 15s to allow Render's proxy to catch the ping
-            response = requests.get(HEALTH_URL, timeout=15)
-            
-            if response.status_code in [200, 404, 405]:
-                status.update(label="🟢 Backend API Connected!", state="complete", expanded=False)
-                is_connected = True
-                break
-        except requests.exceptions.RequestException as e:
-            # Print the exact error to the terminal to see why it fails
-            print(f"Ping failed: {e}")
-            pass
-        
-        time.sleep(5)
-        
-    if not is_connected:
-        status.update(label="🔴 Backend failed to wake up.", state="error", expanded=True)
-        st.stop()
-        
+if not st.session_state.backend_awake:
+    st.session_state.backend_awake = check_backend()
+
+if st.session_state.backend_awake:
+    st.sidebar.success("🟢 Backend API Connected")
+else:
+    st.sidebar.warning(
+        "🟡 Backend is waking up...\n\n"
+        "This app runs on free-tier hosting, which spins down the ML backend "
+        "(XGBoost + SHAP) after inactivity. First load can take **30-60 seconds** "
+        "to wake up — click below to check again."
+    )
+    if st.sidebar.button("🔄 Check again"):
+        st.session_state.backend_awake = check_backend()
+        st.rerun()
+
+
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
 uploaded_file = st.sidebar.file_uploader("Upload Engine History", type=["csv", "txt"])
