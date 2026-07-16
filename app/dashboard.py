@@ -50,13 +50,20 @@ else:
     st.sidebar.warning(
         "🟡 Backend is waking up...\n\n"
         "This app runs on free-tier hosting, which spins down the ML backend "
-        "(XGBoost + SHAP) after inactivity. First load can take **30-60 seconds** "
-        "to wake up — click below to check again."
+        "(XGBoost + SHAP) after inactivity. First load can take **30-60 seconds**."
     )
-    if st.sidebar.button("🔄 Check again"):
-        st.session_state.backend_awake = check_backend()
-        st.rerun()
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("🔄 Check again"):
+            st.session_state.backend_awake = check_backend()
+            st.rerun()
+    with col2:
+        st.link_button("🔗 Wake manually", "https://predictx-ai-k11o.onrender.com")
 
+    st.sidebar.caption(
+        "Tip: if it's stuck, click 'Wake manually' to open the backend directly "
+        "(takes ~30s to load), then come back and click 'Check again'."
+    )
 
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
