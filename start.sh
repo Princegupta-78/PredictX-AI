@@ -2,7 +2,7 @@
 
 # 1. Start the FastAPI backend in the background on port 8000
 # (Targets app/api.py)
-uvicorn app.api:app --host 0.0.0.0 --port 8000 &
+uvicorn app.api:predict_api --host 0.0.0.0 --port 8000 &
 
 # 2. Give the backend 5 seconds to load the ML model into memory
 sleep 5
