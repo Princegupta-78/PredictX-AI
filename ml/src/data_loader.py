@@ -1,7 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-import streamlit as st
-# ... rest of your imports
 from pathlib import Path
 import pandas as pd
 

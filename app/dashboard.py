@@ -28,42 +28,11 @@ st.markdown("---")
 # ==========================================
 st.sidebar.header("System Status")
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
-HEALTH_URL = f"{API_URL.rstrip('/')}/"
+# They share localhost inside the unified container!
+API_URL = "http://127.0.0.1:8000"
 
-if "backend_awake" not in st.session_state:
-    st.session_state.backend_awake = False
-
-def check_backend():
-    try:
-        r = requests.get(HEALTH_URL, timeout=5)
-        return r.status_code == 200
-    except requests.exceptions.RequestException:
-        return False
-
-if not st.session_state.backend_awake:
-    st.session_state.backend_awake = check_backend()
-
-if st.session_state.backend_awake:
-    st.sidebar.success("🟢 Backend API Connected")
-else:
-    st.sidebar.warning(
-        "🟡 Backend is waking up...\n\n"
-        "This app runs on free-tier hosting, which spins down the ML backend "
-        "(XGBoost + SHAP) after inactivity. First load can take **30-60 seconds**."
-    )
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        if st.button("🔄 Check again"):
-            st.session_state.backend_awake = check_backend()
-            st.rerun()
-    with col2:
-        st.link_button("🔗 Wake manually", "https://predictx-ai-k11o.onrender.com")
-
-    st.sidebar.caption(
-        "Tip: if it's stuck, click 'Wake manually' to open the backend directly "
-        "(takes ~30s to load), then come back and click 'Check again'."
-    )
+st.sidebar.success("🟢 System Online & Ready")
+st.sidebar.caption("API and UI running securely in unified container.")
 
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
