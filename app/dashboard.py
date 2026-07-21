@@ -37,7 +37,9 @@ st.sidebar.caption("API and UI running securely in unified container.")
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
 
-# 1. 1-Click Demo Button for Interviewers
+# 1. Dropdown and Button for all 4 Demo Datasets
+demo_options = ["test_FD001.txt", "test_FD002.txt", "test_FD003.txt", "test_FD004.txt"]
+selected_demo = st.sidebar.selectbox("Select a Demo Dataset", demo_options)
 use_demo = st.sidebar.button("🚀 Load Demo Data (For Testing)", use_container_width=True)
 
 # 2. Standard Upload Option
@@ -50,19 +52,26 @@ st.sidebar.write("**Dataset:** NASA CMAPSS FD001")
 st.sidebar.write("**Explainability:** SHAP")
 
 # ==========================================
-# MAIN DASHBOARD LOGIC
+# MAIN DASHBOARD LOGIC (Updated with Session State)
 # ==========================================
-df = None
+# Initialize session state to remember the dataframe across reruns
+if "df" not in st.session_state:
+    st.session_state.df = None
 
-# 1. Determine which data to load
+# 1. Determine which data to load and save it to memory
 if use_demo:
     try:
-        df = pd.read_csv("data/test_FD001.txt", sep=r"\s+", header=None)
-        st.sidebar.success("Demo dataset loaded successfully!")
+        # Dynamically load the dataset they selected from the dropdown
+        file_path = f"data/{selected_demo}"
+        st.session_state.df = pd.read_csv(file_path, sep=r"\s+", header=None)
+        st.sidebar.success(f"{selected_demo} loaded successfully!")
     except FileNotFoundError:
-        st.sidebar.error("Demo file not found. Please ensure 'data/test_FD001.txt' exists.")
+        st.sidebar.error(f"File not found. Please ensure '.dockerignore' isn't blocking the data folder.")
 elif uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, sep=r"\s+", header=None)
+    st.session_state.df = pd.read_csv(uploaded_file, sep=r"\s+", header=None)
+
+# Grab the dataframe from memory for the rest of the app
+df = st.session_state.df
 
 # 2. If data is loaded (either demo or upload), show the dashboard
 if df is not None:
