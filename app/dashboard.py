@@ -36,7 +36,12 @@ st.sidebar.caption("API and UI running securely in unified container.")
 
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
-uploaded_file = st.sidebar.file_uploader("Upload Engine History", type=["csv", "txt"])
+
+# 1. 1-Click Demo Button for Interviewers
+use_demo = st.sidebar.button("🚀 Load Demo Data (For Testing)", use_container_width=True)
+
+# 2. Standard Upload Option
+uploaded_file = st.sidebar.file_uploader("Or Upload Engine History", type=["csv", "txt"])
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Model Information")
@@ -47,10 +52,20 @@ st.sidebar.write("**Explainability:** SHAP")
 # ==========================================
 # MAIN DASHBOARD LOGIC
 # ==========================================
-if uploaded_file is not None:
-    # 1. Load Data
+df = None
+
+# 1. Determine which data to load
+if use_demo:
+    try:
+        df = pd.read_csv("data/test_FD001.txt", sep=r"\s+", header=None)
+        st.sidebar.success("Demo dataset loaded successfully!")
+    except FileNotFoundError:
+        st.sidebar.error("Demo file not found. Please ensure 'data/test_FD001.txt' exists.")
+elif uploaded_file is not None:
     df = pd.read_csv(uploaded_file, sep=r"\s+", header=None)
-    
+
+# 2. If data is loaded (either demo or upload), show the dashboard
+if df is not None:
     # Assign column names (assuming raw CMAPSS format)
     if len(df.columns) == 26:
         columns = ["engine_id", "cycle", "op_setting_1", "op_setting_2", "op_setting_3"] + [f"sensor_{i}" for i in range(1, 22)]
@@ -59,14 +74,14 @@ if uploaded_file is not None:
         st.error("⚠️ Invalid file format. Please upload a valid NASA CMAPSS dataset (26 columns).")
         st.stop() # Halts execution gracefully
         
-    # 2. Select Engine
+    # Select Engine
     engine_ids = sorted(df["engine_id"].unique())
     selected_engine = st.sidebar.selectbox("Select Engine to Analyze", engine_ids)
     engine_df = df[df["engine_id"] == selected_engine]
     
     st.sidebar.info(f"Engine {selected_engine} has {len(engine_df)} cycles of history.")
 
-    # 3. Predict Button
+    # Predict Button
     if st.sidebar.button("Predict Remaining Useful Life", use_container_width=True):
         with st.spinner("Running prediction pipeline..."):
             try:
@@ -163,9 +178,38 @@ if uploaded_file is not None:
 
             except Exception as e:
                 st.error(f"An error occurred during prediction: {str(e)}")
+
+# 3. If NO data is loaded, show the professional splash screen
 else:
-    # Splash Screen when no data is uploaded
-    st.info("👈 Upload a raw CMAPSS `test_FD001.txt` CSV file in the sidebar to begin.")
+    # ==========================================
+    # PROFESSIONAL SPLASH SCREEN FOR INTERVIEWERS
+    # ==========================================
+    st.markdown("### ✈️ Welcome to the PredictX AI Dashboard")
+    st.write("This application predicts the **Remaining Useful Life (RUL)** of turbofan engines to prevent catastrophic failures and optimize maintenance schedules.")
+    
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### 🛠️ System Architecture")
+        st.markdown("""
+        * **Deployment:** Monolithic Docker container hosted on Render.
+        * **Backend:** FastAPI REST API handling model inference.
+        * **Frontend:** Streamlit interactive UI.
+        * **Network:** Zero-latency internal communication via `localhost`.
+        """)
+        
+    with col2:
+        st.markdown("#### 🧠 Machine Learning")
+        st.markdown("""
+        * **Model:** XGBoost Regressor trained on NASA CMAPSS sensor data.
+        * **Explainability:** Real-time SHAP (SHapley Additive exPlanations) values to identify failing components.
+        * **Risk Assessment:** Automated categorization into Healthy, Medium, or High Risk based on engine cycles.
+        """)
+
+    st.markdown("---")
+    st.info("👈 **To test the application:** Click the **'🚀 Load Demo Data'** button in the sidebar to instantly load a test dataset, or upload your own raw CMAPSS file.")
 
 st.markdown("---")
 st.caption("PredictX AI • Built using Python • XGBoost • SHAP • FastAPI • Streamlit")
