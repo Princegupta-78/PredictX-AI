@@ -1,19 +1,17 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y libgomp1 libstdc++6 && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy both requirements files based on your structure
 COPY requirements.txt .
 COPY requirements-frontend.txt .
+RUN pip install --no-cache-dir --default-timeout=600 --retries=10 -r requirements.txt -r requirements-frontend.txt
 
-# Install everything together
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-frontend.txt
-
-# Copy the rest of your project into the container
 COPY . .
 
-# Make the startup script executable
+ENV PYTHONPATH=/app:/app/ml
 RUN chmod +x start.sh
 
-# Run the startup script
+EXPOSE 8501
 CMD ["./start.sh"]

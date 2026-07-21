@@ -1,12 +1,11 @@
 #!/bin/bash
+set -e
 
-# 1. Start the FastAPI backend in the background on port 8000
-# (Targets app/api.py)
-uvicorn app.api:predict_api --host 0.0.0.0 --port 8000 &
+# 1. Start FastAPI backend internally (correct module)
+uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
 
-# 2. Give the backend 5 seconds to load the ML model into memory
-sleep 5
+# 2. Give it time to load XGBoost model
+sleep 8
 
-# 3. Start the Streamlit frontend in the foreground on Render's assigned port
-# (Targets app/dashboard.py)
+# 3. Start Streamlit on Render's public port
 streamlit run app/dashboard.py --server.port $PORT --server.address 0.0.0.0
