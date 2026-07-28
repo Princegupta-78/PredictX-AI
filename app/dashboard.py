@@ -37,10 +37,8 @@ st.sidebar.caption("API and UI running securely in unified container.")
 st.sidebar.markdown("---")
 st.sidebar.header("Data Input")
 
-# 1. Dropdown and Button for all 4 Demo Datasets
-demo_options = ["test_FD001.txt", "test_FD002.txt", "test_FD003.txt", "test_FD004.txt"]
-selected_demo = st.sidebar.selectbox("Select a Demo Dataset", demo_options)
-use_demo = st.sidebar.button("🚀 Load Demo Data (For Testing)", use_container_width=True)
+# 1. Single 1-Click Demo Button for FD001 (Safe for this model)
+use_demo = st.sidebar.button("🚀 Load Demo Data (FD001)", use_container_width=True)
 
 # 2. Standard Upload Option
 uploaded_file = st.sidebar.file_uploader("Or Upload Engine History", type=["csv", "txt"])
@@ -61,12 +59,12 @@ if "df" not in st.session_state:
 # 1. Determine which data to load and save it to memory
 if use_demo:
     try:
-        # Dynamically load the dataset they selected from the dropdown
-        file_path = f"data/{selected_demo}"
+        # Hardcode strictly to FD001 so the model doesn't fail during interviews
+        file_path = "data/test_FD001.txt"
         st.session_state.df = pd.read_csv(file_path, sep=r"\s+", header=None)
-        st.sidebar.success(f"{selected_demo} loaded successfully!")
+        st.sidebar.success("test_FD001.txt loaded successfully!")
     except FileNotFoundError:
-        st.sidebar.error(f"File not found. Please ensure '.dockerignore' isn't blocking the data folder.")
+        st.sidebar.error("File not found. Please ensure 'data/test_FD001.txt' exists.")
 elif uploaded_file is not None:
     st.session_state.df = pd.read_csv(uploaded_file, sep=r"\s+", header=None)
 
@@ -218,7 +216,7 @@ else:
         """)
 
     st.markdown("---")
-    st.info("👈 **To test the application:** Click the **'🚀 Load Demo Data'** button in the sidebar to instantly load a test dataset, or upload your own raw CMAPSS file.")
+    st.info("👈 **To test the application:** Click the **'🚀 Load Demo Data (FD001)'** button in the sidebar to instantly load a test dataset, or upload your own raw CMAPSS file.")
 
 st.markdown("---")
 st.caption("PredictX AI • Built using Python • XGBoost • SHAP • FastAPI • Streamlit")
